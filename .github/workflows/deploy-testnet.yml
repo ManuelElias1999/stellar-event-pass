@@ -54,6 +54,7 @@ jobs:
 
           VALID_BEFORE="$(stellar contract invoke \
             --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
             --network testnet \
             -- is_valid \
             --pass_id 101)"
@@ -68,12 +69,14 @@ jobs:
 
           FINAL_STATE="$(stellar contract invoke \
             --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
             --network testnet \
             -- get_pass \
             --pass_id 101)"
 
           VALID_AFTER="$(stellar contract invoke \
             --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
             --network testnet \
             -- is_valid \
             --pass_id 101)"
