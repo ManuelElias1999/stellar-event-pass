@@ -1,0 +1,105 @@
+name: Run Event Pass Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      pass_id:
+        description: Fresh pass ID to demonstrate
+        required: true
+        default: "202"
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/run-demo.yml
+
+permissions:
+  contents: read
+
+jobs:
+  invoke-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Stellar CLI
+        uses: stellar/stellar-cli@v23.1.4
+
+      - name: Run successful Event Pass flow
+        shell: bash
+        env:
+          CONTRACT_ID: CDWTEUQI3WULFFXAQ22A2VFT22GGA3OEKT5L7XL62TJHKYHHMGQIXONH
+          PASS_ID: ${{ github.event.inputs.pass_id || '202' }}
+        run: |
+          set -euo pipefail
+
+          IDENTITY="manuel-demo-${GITHUB_RUN_ID}"
+          stellar keys generate "$IDENTITY" --network testnet --fund
+          BUYER="$(stellar keys address "$IDENTITY")"
+
+          PURCHASE_RESULT="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
+            --network testnet \
+            -- purchase \
+            --buyer "$BUYER" \
+            --pass_id "$PASS_ID")"
+
+          VALID_BEFORE="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
+            --network testnet \
+            -- is_valid \
+            --pass_id "$PASS_ID")"
+
+          REDEEM_RESULT="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
+            --network testnet \
+            -- redeem \
+            --holder "$BUYER" \
+            --pass_id "$PASS_ID")"
+
+          VALID_AFTER="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
+            --network testnet \
+            -- is_valid \
+            --pass_id "$PASS_ID")"
+
+          FINAL_STATE="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
+            --network testnet \
+            -- get_pass \
+            --pass_id "$PASS_ID")"
+
+          EXPLORER_URL="https://stellar.expert/explorer/testnet/contract/$CONTRACT_ID"
+
+          echo "::notice title=Contract ID::$CONTRACT_ID"
+          echo "::notice title=Buyer::$BUYER"
+          echo "::notice title=Pass ID::$PASS_ID"
+          echo "::notice title=Explorer::$EXPLORER_URL"
+
+          {
+            echo "## Event Pass demo completed"
+            echo
+            echo "- Contract: \`$CONTRACT_ID\`"
+            echo "- Buyer: \`$BUYER\`"
+            echo "- Pass: \`$PASS_ID\`"
+            echo "- Valid before redeem: \`$VALID_BEFORE\`"
+            echo "- Valid after redeem: \`$VALID_AFTER\`"
+            echo "- [Open in Stellar Expert]($EXPLORER_URL)"
+            echo
+            echo "### Purchase result"
+            echo '\`\`\`json'
+            echo "$PURCHASE_RESULT"
+            echo '\`\`\`'
+            echo
+            echo "### Redeem result"
+            echo '\`\`\`json'
+            echo "$REDEEM_RESULT"
+            echo '\`\`\`'
+            echo
+            echo "### Final state"
+            echo '\`\`\`json'
+            echo "$FINAL_STATE"
+            echo '\`\`\`'
+          } >> "$GITHUB_STEP_SUMMARY"
