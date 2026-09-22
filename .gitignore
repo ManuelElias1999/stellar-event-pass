@@ -1,0 +1,5 @@
+/target
+/.stellar
+.DS_Store
+*.wasm
+deployment.env
