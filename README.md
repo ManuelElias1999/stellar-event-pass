@@ -73,6 +73,7 @@ stellar contract invoke \
 # 2. Verificar que está activo: devuelve true
 stellar contract invoke \
   --id "$CONTRACT_ID" \
+  --source-account elite-demo \
   --network testnet \
   -- is_valid \
   --pass_id 101
@@ -89,6 +90,7 @@ stellar contract invoke \
 # 4. Ver el estado final: redeemed será true
 stellar contract invoke \
   --id "$CONTRACT_ID" \
+  --source-account elite-demo \
   --network testnet \
   -- get_pass \
   --pass_id 101
