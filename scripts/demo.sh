@@ -23,6 +23,7 @@ stellar contract invoke \
 echo "2/4 Comprobando que el pase está activo"
 stellar contract invoke \
   --id "$CONTRACT_ID" \
+  --source-account "$IDENTITY" \
   --network testnet \
   -- is_valid \
   --pass_id "$PASS_ID"
@@ -39,6 +40,7 @@ stellar contract invoke \
 echo "4/4 Consultando el estado final"
 stellar contract invoke \
   --id "$CONTRACT_ID" \
+  --source-account "$IDENTITY" \
   --network testnet \
   -- get_pass \
   --pass_id "$PASS_ID"
