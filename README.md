@@ -15,6 +15,7 @@ utilizarlo, una única vez.
 - **Estado final:** `redeemed = true`, compra en el ledger `4802546` y canje en el ledger `4802547`.
 - [Ver contrato en Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDWTEUQI3WULFFXAQ22A2VFT22GGA3OEKT5L7XL62TJHKYHHMGQIXONH)
 - [Ver ejecución exitosa en GitHub Actions](https://github.com/ManuelElias1999/stellar-event-pass/actions/runs/35671247634)
+- [Ver demostración adicional con el pase 202](https://github.com/ManuelElias1999/stellar-event-pass/actions/runs/35677851233)
 
 ## Funciones
 
