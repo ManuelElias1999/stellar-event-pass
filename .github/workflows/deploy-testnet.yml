@@ -1,0 +1,119 @@
+name: Deploy Testnet Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/deploy-testnet.yml
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-and-invoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Stellar CLI
+        uses: stellar/stellar-cli@v23.1.4
+
+      - name: Cache Rust dependencies
+        uses: stellar/actions/rust-cache@main
+
+      - name: Test contract
+        run: cargo test --workspace
+
+      - name: Build contract WASM
+        run: stellar contract build --package event-pass
+
+      - name: Deploy and execute successful flow
+        id: demo
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IDENTITY="elite-demo-${GITHUB_RUN_ID}"
+          stellar keys generate "$IDENTITY" --network testnet --fund
+          BUYER="$(stellar keys address "$IDENTITY")"
+
+          CONTRACT_ID="$(stellar contract deploy \
+            --wasm target/wasm32v1-none/release/event_pass.wasm \
+            --source-account "$IDENTITY" \
+            --network testnet)"
+
+          PURCHASE_RESULT="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
+            --network testnet \
+            -- purchase \
+            --buyer "$BUYER" \
+            --pass_id 101)"
+
+          VALID_BEFORE="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --network testnet \
+            -- is_valid \
+            --pass_id 101)"
+
+          REDEEM_RESULT="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account "$IDENTITY" \
+            --network testnet \
+            -- redeem \
+            --holder "$BUYER" \
+            --pass_id 101)"
+
+          FINAL_STATE="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --network testnet \
+            -- get_pass \
+            --pass_id 101)"
+
+          VALID_AFTER="$(stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --network testnet \
+            -- is_valid \
+            --pass_id 101)"
+
+          EXPLORER_URL="https://stellar.expert/explorer/testnet/contract/$CONTRACT_ID"
+
+          echo "::notice title=Contract ID::$CONTRACT_ID"
+          echo "::notice title=Buyer::$BUYER"
+          echo "::notice title=Explorer::$EXPLORER_URL"
+
+          {
+            echo "CONTRACT_ID=$CONTRACT_ID"
+            echo "BUYER=$BUYER"
+            echo "PASS_ID=101"
+            echo "VALID_BEFORE=$VALID_BEFORE"
+            echo "VALID_AFTER=$VALID_AFTER"
+            echo "EXPLORER_URL=$EXPLORER_URL"
+            echo "PURCHASE_RESULT=$PURCHASE_RESULT"
+            echo "REDEEM_RESULT=$REDEEM_RESULT"
+            echo "FINAL_STATE=$FINAL_STATE"
+          } | tee deployment-evidence.txt
+
+          {
+            echo "## Stellar Testnet deployment"
+            echo
+            echo "- Contract: \`$CONTRACT_ID\`"
+            echo "- Buyer: \`$BUYER\`"
+            echo "- Pass: \`101\`"
+            echo "- Valid before redeem: \`$VALID_BEFORE\`"
+            echo "- Valid after redeem: \`$VALID_AFTER\`"
+            echo "- [Open in Stellar Expert]($EXPLORER_URL)"
+            echo
+            echo "### Final state"
+            echo '\`\`\`json'
+            echo "$FINAL_STATE"
+            echo '\`\`\`'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload deployment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: stellar-testnet-evidence
+          path: deployment-evidence.txt
