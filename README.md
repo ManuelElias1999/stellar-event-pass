@@ -4,6 +4,18 @@ Contrato inteligente en Soroban para **Stellar Elite Bolivia**. El ledger regist
 qué address compró cada pase numerado y garantiza que solo su propietario pueda
 utilizarlo, una única vez.
 
+
+## Despliegue verificado en Testnet
+
+- **Contract ID:** `CDWTEUQI3WULFFXAQ22A2VFT22GGA3OEKT5L7XL62TJHKYHHMGQIXONH`
+- **Buyer:** `GDF7XZHJ3QGEKGSZUVILGR64FLI3FZHO5CMPHXSL3EBJP6UAY6S4PGIG`
+- **Pass ID:** `101`
+- **Antes del canje:** `is_valid = true`
+- **Después del canje:** `is_valid = false`
+- **Estado final:** `redeemed = true`, compra en el ledger `4802546` y canje en el ledger `4802547`.
+- [Ver contrato en Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDWTEUQI3WULFFXAQ22A2VFT22GGA3OEKT5L7XL62TJHKYHHMGQIXONH)
+- [Ver ejecución exitosa en GitHub Actions](https://github.com/ManuelElias1999/stellar-event-pass/actions/runs/35671247634)
+
 ## Funciones
 
 - `purchase(buyer, pass_id)`: compra un pase libre y exige la firma de `buyer`.
@@ -108,7 +120,7 @@ chmod +x scripts/demo.sh
 Después del despliegue, abre:
 
 ```text
-https://stellar.expert/explorer/testnet/contract/CONTRACT_ID
+https://stellar.expert/explorer/testnet/contract/CDWTEUQI3WULFFXAQ22A2VFT22GGA3OEKT5L7XL62TJHKYHHMGQIXONH
 ```
 
 En **Contract Activity / Events** se verán `PassPurchased` y `PassRedeemed`.
